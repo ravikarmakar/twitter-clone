@@ -1,9 +1,32 @@
 import { Link } from "react-router-dom";
 import RightPanelSkeleton from "../skeletons/RightPanelSkeleton";
-import { USERS_FOR_RIGHT_PANEL } from "../../utils/db/dummy";
+// import { USERS_FOR_RIGHT_PANEL } from "../../utils/db/dummy";
+import { useQuery } from "@tanstack/react-query";
+import useFollow from "../../hooks/useFollow.jsx";
+import LoadingSpinner from "../common/LoadingSpinner.jsx";
 
 const RightPanel = () => {
-  const isLoading = false;
+  const { data: suggestedUsers, isLoading } = useQuery({
+    queryKey: ["suggestedUsers"],
+    queryFn: async () => {
+      try {
+        const res = await fetch("/api/users/suggested");
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || "Something went wrong");
+        }
+        return data;
+      } catch (error) {
+        throw new Error(error);
+      }
+    },
+  });
+
+  const { follow, isPending } = useFollow();
+
+  if (suggestedUsers?.length === 0)
+    return <div className="md:w-64 , m-0"></div>;
 
   return (
     <div className="hidden lg:block my-4 mx-2">
@@ -20,7 +43,7 @@ const RightPanel = () => {
             </>
           )}
           {!isLoading &&
-            USERS_FOR_RIGHT_PANEL?.map((user) => (
+            suggestedUsers?.map((user) => (
               <Link
                 to={`/profile/${user.username}`}
                 className="flex items-center justify-between gap-4"
@@ -43,10 +66,13 @@ const RightPanel = () => {
                 </div>
                 <div>
                   <button
-                    className="btn bg-white text-black hover:bg-white hover:opacity-90 rounded-full btn-sm"
-                    onClick={(e) => e.preventDefault()}
+                    className="btn bg-white text-black hover:bg-white hover:opacity-90 rounded-full btn-sm cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      follow(user._id);
+                    }}
                   >
-                    Follow
+                    {isPending ? <LoadingSpinner size="sm" /> : "Follow"}
                   </button>
                 </div>
               </Link>

@@ -41,7 +41,7 @@ export const deletePost = async (req, res) => {
   try {
     const postId = req.params.id;
     const post = await Post.findById(postId);
-    console.log(post);
+    // console.log(post);
     if (!post) {
       return res.status(404).json({ message: "Post Not Found" });
     }
@@ -53,7 +53,7 @@ export const deletePost = async (req, res) => {
     }
 
     if (post.img) {
-      let imgId = await Post.img.split("/").pop().split(".")[0];
+      let imgId = post.img.split("/").pop().split(".")[0];
       await cloudinary.uploader.destroy(imgId);
     }
 
